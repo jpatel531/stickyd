@@ -1,13 +1,11 @@
 package frontends
 
-type Config struct {
-	AddressIPV6 bool
-	Address     string
-	Port        int
-}
+import (
+	"github.com/jpatel531/stickyd/config"
+)
 
 type Frontend interface {
-	Start(*Config, Handler)
+	Start(*config.Frontend, Handler)
 }
 
 type RemoteInfo struct {
