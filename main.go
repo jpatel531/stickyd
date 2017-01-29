@@ -3,17 +3,10 @@ package main
 import (
 	"github.com/jpatel531/stickyd/config"
 	"github.com/jpatel531/stickyd/frontend"
-
+	"github.com/jpatel531/stickyd/stats"
 	"log"
 	"os"
-	"strings"
 )
-
-type udpHandler struct{}
-
-func (u udpHandler) HandleMessage(msg []byte, rinfo *frontends.RemoteInfo) {
-	log.Printf("Received %s from %+v\n", strings.TrimSpace(string(msg)), rinfo)
-}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -32,9 +25,13 @@ func main() {
 		log.Panicln(err)
 	}
 
+	sts := stats.New(cfg.PrefixStats)
 	for _, serverCfg := range cfg.Servers {
-		server := frontends.UDP{}
-		server.Start(serverCfg, udpHandler{})
+		server := frontend.NewUDPFrontend()
+		server.Start(serverCfg, handler{
+			stats:  sts,
+			config: cfg,
+		})
 	}
 	select {}
 }

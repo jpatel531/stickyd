@@ -1,4 +1,4 @@
-package frontends
+package frontend
 
 import (
 	"github.com/jpatel531/stickyd/config"
@@ -9,13 +9,17 @@ import (
 
 const bufLen = 512
 
-type UDP struct{}
+func NewUDPFrontend() Frontend {
+	return new(udp)
+}
 
-func (u *UDP) Start(config *config.Frontend, handler Handler) {
+type udp struct{}
+
+func (u *udp) Start(config *config.Frontend, handler Handler) {
 	go u.start(config, handler)
 }
 
-func (u *UDP) start(config *config.Frontend, handler Handler) {
+func (u *udp) start(config *config.Frontend, handler Handler) {
 	var udpVersion string
 	if config.AddressIPV6 {
 		udpVersion = "udp6"

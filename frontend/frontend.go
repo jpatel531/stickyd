@@ -1,4 +1,4 @@
-package frontends
+package frontend
 
 import (
 	"github.com/jpatel531/stickyd/config"
