@@ -59,11 +59,20 @@ func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 			value, _ := strconv.Atoi(fields[0])
 			switch metricType {
 			// TODO add more
+			case "s":
+				h.stats.Sets.Insert(key, value) // TODO value should be interface
+			case "g":
+				// TODO allow +- increments
+				h.stats.Gauges.Set(key, float64(value))
 			default: // c
 				h.stats.Counters.Incr(key, float64(value*1/sampleRate))
 			}
 
 			log.Printf("counters: %s\n", h.stats.Counters.String())
+			log.Printf("gauges: %s\n", h.stats.Gauges.String())
+			log.Printf("sets: %s\n", h.stats.Sets.String())
+
+			// TODO add last message seent
 		}
 	}
 
