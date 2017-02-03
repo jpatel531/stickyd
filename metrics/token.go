@@ -1,4 +1,4 @@
-package inboundmsg
+package metrics
 
 type token int
 

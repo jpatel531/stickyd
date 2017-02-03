@@ -1,4 +1,4 @@
-package inboundmsg
+package metrics
 
 import (
 	"bufio"
@@ -81,10 +81,14 @@ func (s *scanner) scanDecimal() (tok token, lit string) {
 	var buf bytes.Buffer
 
 	ch := s.read()
-	if ch != '0' {
+
+	if ch != '0' && ch != '1' {
 		return illegal, buf.String()
 	}
 	buf.WriteRune(ch)
+	if ch == '1' {
+		return decimal, buf.String()
+	}
 
 	ch = s.read()
 	if ch != '.' {

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/jpatel531/stickyd/config"
 	"github.com/jpatel531/stickyd/frontend"
+	"github.com/jpatel531/stickyd/metrics"
 	"github.com/jpatel531/stickyd/stats"
 	"github.com/jpatel531/stickyd/util"
 	"log"
@@ -19,61 +20,59 @@ func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 	log.Printf("Received %s from %+v\n", strings.TrimSpace(string(msg)), rinfo)
 	h.stats.Counters.IncrPacketsReceived()
 
-	metrics := strings.Split(strings.TrimSpace(string(msg)), "\n")
+	metricsStrings := strings.Split(strings.TrimSpace(string(msg)), "\n")
 
-	for _, metric := range metrics {
+	for _, metricString := range metricsStrings {
 		h.stats.Counters.IncrMetricsReceived()
+
+		metric, err := metrics.Parse([]byte(metricString))
+		if err != nil {
+			log.Printf("error parsing metric %q. Error received: %v\n", metricString, err)
+			// 	// TODO stats.messages.bad_lines_seen
+			h.stats.Counters.IncrBadLinesSeen()
+			continue
+		}
+		metric.Key = util.SanitizeKey(metric.Key)
 
 		if h.config.DumpMessages {
 			log.Printf("metric received: %+v\n", metric)
 		}
 
-		var (
-			key   string
-			parts = strings.Split(metric, ":")
-		)
-		key, parts = util.SanitizeKey(parts[0]), parts[1:]
-
 		// TODO add to key counter
 
-		if len(parts) == 0 {
-			parts = append(parts, "1")
+		var sampleRate float64
+		if metric.SampleRate == nil {
+			sampleRate = 1
+		} else {
+			sampleRate = *metric.SampleRate
+			// TODO handle > 1 sample rates
 		}
-
-		for _, part := range parts {
-			fields := strings.Split(part, "|")
-			if !util.IsValidPacket(fields) {
-				log.Printf("Bad line: %+v in msg in %+v\n", fields, metric)
+		switch metric.Type {
+		// TODO add more
+		case "s":
+			h.stats.Sets.Insert(metric.Key, metric.Value)
+		case "g", "c":
+			value, err := strconv.ParseFloat(metric.Value, 64)
+			if err != nil {
+				log.Printf("Expected float value, received %q", value)
+				// 	// TODO stats.messages.bad_lines_seen
 				h.stats.Counters.IncrBadLinesSeen()
-				// TODO stats.messages.bad_lines_seen
 				continue
 			}
 
-			sampleRate := 1
-			if len(fields) > 2 {
-				sampleRate, _ = strconv.Atoi(fields[2][1:])
-			}
-
-			metricType := strings.TrimSpace(fields[1])
-
-			value, _ := strconv.Atoi(fields[0])
-			switch metricType {
-			// TODO add more
-			case "s":
-				h.stats.Sets.Insert(key, value) // TODO value should be interface
-			case "g":
+			if metric.Type == "g" {
 				// TODO allow +- increments
-				h.stats.Gauges.Set(key, float64(value))
-			default: // c
-				h.stats.Counters.Incr(key, float64(value*1/sampleRate))
+				h.stats.Gauges.Set(metric.Key, float64(value))
+			} else {
+				h.stats.Counters.Incr(metric.Key, float64(value*1/sampleRate))
 			}
-
-			log.Printf("counters: %s\n", h.stats.Counters.String())
-			log.Printf("gauges: %s\n", h.stats.Gauges.String())
-			log.Printf("sets: %s\n", h.stats.Sets.String())
-
-			// TODO add last message seent
+		default: // c
+			log.Printf("Unsupported type %q", metric.Type)
 		}
+
+		log.Printf("counters: %s\n", h.stats.Counters.String())
+		log.Printf("gauges: %s\n", h.stats.Gauges.String())
+		log.Printf("sets: %s\n", h.stats.Sets.String())
 	}
 
 }

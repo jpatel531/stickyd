@@ -1,4 +1,4 @@
-package inboundmsg
+package metrics
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -13,7 +13,22 @@ func TestParserWithSampleRate(t *testing.T) {
 	assert.NoError(t, err)
 
 	var sampleRate float64 = 0.1
-	assert.Equal(t, &Message{
+	assert.Equal(t, &Metric{
+		Key:        "yolo.gauge",
+		Value:      "14000",
+		Type:       "c",
+		SampleRate: &sampleRate,
+	}, msg)
+}
+
+func TestParserWith100PercentSampleRate(t *testing.T) {
+	r := strings.NewReader("yolo.gauge:14000|c|@1")
+	p := newParser(r)
+	msg, err := p.parse()
+	assert.NoError(t, err)
+
+	var sampleRate float64 = 1
+	assert.Equal(t, &Metric{
 		Key:        "yolo.gauge",
 		Value:      "14000",
 		Type:       "c",
@@ -27,7 +42,7 @@ func TestParserNoSampleRate(t *testing.T) {
 	msg, err := p.parse()
 	assert.NoError(t, err)
 
-	assert.Equal(t, &Message{
+	assert.Equal(t, &Metric{
 		Key:   "yolo.gauge",
 		Value: "14000",
 		Type:  "c",
@@ -40,7 +55,7 @@ func TestParserNonNumericalValue(t *testing.T) {
 	msg, err := p.parse()
 	assert.NoError(t, err)
 
-	assert.Equal(t, &Message{
+	assert.Equal(t, &Metric{
 		Key:   "bla",
 		Value: "wootwootr3",
 		Type:  "s",

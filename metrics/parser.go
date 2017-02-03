@@ -1,4 +1,4 @@
-package inboundmsg
+package metrics
 
 import (
 	"fmt"
@@ -34,8 +34,8 @@ func (p *parser) unscan() {
 	p.buf.n = 1
 }
 
-func (p *parser) parse() (*Message, error) {
-	message := &Message{}
+func (p *parser) parse() (*Metric, error) {
+	metric := &Metric{}
 
 	var (
 		tok token
@@ -46,7 +46,7 @@ func (p *parser) parse() (*Message, error) {
 	if tok, lit = p.scan(); tok != ident {
 		return nil, fmt.Errorf("expected key, found %q", lit)
 	}
-	message.Key = lit
+	metric.Key = lit
 
 	// scan :
 	if tok, lit = p.scan(); tok != colon {
@@ -57,7 +57,7 @@ func (p *parser) parse() (*Message, error) {
 	if tok, lit = p.scan(); tok != ident {
 		return nil, fmt.Errorf("expected value, found %q", lit)
 	}
-	message.Value = lit
+	metric.Value = lit
 
 	// scan |
 	if tok, lit = p.scan(); tok != separator {
@@ -68,11 +68,11 @@ func (p *parser) parse() (*Message, error) {
 	if tok, lit = p.scan(); tok != ident {
 		return nil, fmt.Errorf("expected type, found %q", lit)
 	}
-	message.Type = lit
+	metric.Type = lit
 
 	// if eof, return
 	if tok, lit = p.scan(); tok == eof {
-		return message, nil
+		return metric, nil
 	}
 
 	// sample rate is indented. check for |
@@ -89,6 +89,6 @@ func (p *parser) parse() (*Message, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse sample rate string: %s", err.Error())
 	}
-	message.SampleRate = &sampleRate
-	return message, nil
+	metric.SampleRate = &sampleRate
+	return metric, nil
 }
