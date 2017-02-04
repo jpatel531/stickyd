@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"sync"
@@ -10,6 +11,7 @@ type FloatMap interface {
 	Get(key string) float64
 	Set(key string, value float64)
 	Incr(key string, n float64)
+	json.Marshaler
 	fmt.Stringer
 }
 
@@ -45,14 +47,22 @@ func (c concurrentFloatMap) getShard(key string) *floatShard {
 	return c[h.Sum32()%shardCount]
 }
 
-func (c concurrentFloatMap) String() string {
+func (c concurrentFloatMap) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.merge())
+}
+
+func (c concurrentFloatMap) merge() map[string]float64 {
 	merger := make(map[string]float64)
 	for _, s := range c {
 		for k, v := range s.data {
 			merger[k] = v
 		}
 	}
-	return fmt.Sprintf("%+v", merger)
+	return merger
+}
+
+func (c concurrentFloatMap) String() string {
+	return fmt.Sprintf("%+v", c.merge())
 }
 
 type floatShard struct {

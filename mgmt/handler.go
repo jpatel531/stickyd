@@ -52,11 +52,30 @@ func (h *handler) handleRequest(conn io.ReadWriteCloser) {
 			conn.Write([]byte(fmt.Sprintf("uptime: %d\n", uptime)))
 			conn.Write([]byte(fmt.Sprintf("messages.bad_lines_seen: %d\n", h.processStats.Messages.BadLinesSeen())))
 			conn.Write([]byte(fmt.Sprintf("messages.last_message_seen: %d\n", now-h.processStats.Messages.LastMessageSeen())))
-			conn.Write([]byte("END\n"))
-			// TODO add backend status
+			conn.Write([]byte("END\n\n"))
+		// TODO add backend status
+		case "counters":
+			if err := writeStats(conn, h.appStats.Counters); err != nil {
+				conn.Write([]byte("Error marshalling counters to json\n"))
+				continue
+			}
+		case "gauges":
+			if err := writeStats(conn, h.appStats.Gauges); err != nil {
+				conn.Write([]byte("Error marshalling gauges to json\n"))
+				continue
+			}
 		case "quit":
 			return
 		}
 	}
 
+}
+
+func writeStats(conn io.ReadWriteCloser, stats interface{}) (err error) {
+	body, err := json.Marshal(stats)
+	if err != nil {
+		return
+	}
+	conn.Write(append(body, []byte("\nEND\n\n")...))
+	return
 }

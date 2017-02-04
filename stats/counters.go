@@ -40,3 +40,7 @@ func (c *Counters) Incr(key string, n float64) {
 func (c *Counters) String() string {
 	return c.counter.String()
 }
+
+func (c *Counters) MarshalJSON() ([]byte, error) {
+	return c.counter.MarshalJSON()
+}

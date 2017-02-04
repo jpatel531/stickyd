@@ -27,3 +27,7 @@ func (g *Gauges) Set(key string, n float64) {
 func (g *Gauges) String() string {
 	return g.gauge.String()
 }
+
+func (g *Gauges) MarshalJSON() ([]byte, error) {
+	return g.gauge.MarshalJSON()
+}
