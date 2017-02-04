@@ -14,16 +14,24 @@ const (
 )
 
 type Server struct {
-	stats   *stats.Stats
 	config  *config.Config
 	handler *handler
 }
 
-func NewMgmtServer(stats *stats.Stats, config *config.Config) *Server {
+func NewMgmtServer(
+	appStats *stats.AppStats,
+	processStats *stats.ProcessStats,
+	config *config.Config,
+	startupTime int64,
+) *Server {
 	return &Server{
-		stats:   stats,
-		config:  config,
-		handler: &handler{stats, config},
+		config: config,
+		handler: &handler{
+			appStats:     appStats,
+			processStats: processStats,
+			config:       config,
+			startupTime:  startupTime,
+		},
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/jpatel531/stickyd/stats"
 	"log"
 	"os"
+	"time"
 )
 
 func main() {
@@ -26,16 +27,21 @@ func main() {
 		log.Panicln(err)
 	}
 
-	sts := stats.New(cfg.PrefixStats)
+	startupTime := time.Now().Unix()
+
+	processStats := stats.NewProcessStats(startupTime)
+	appStats := stats.NewAppStats(cfg.PrefixStats)
+
 	for _, serverCfg := range cfg.Servers {
 		server := frontend.NewUDPFrontend()
 		server.Start(serverCfg, handler{
-			stats:  sts,
-			config: cfg,
+			appStats:     appStats,
+			processStats: processStats,
+			config:       cfg,
 		})
 	}
 
-	mgmtServer := mgmt.NewMgmtServer(sts, cfg)
+	mgmtServer := mgmt.NewMgmtServer(appStats, processStats, cfg, startupTime)
 	mgmtServer.Start()
 
 	select {}

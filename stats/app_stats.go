@@ -4,14 +4,14 @@ import (
 	"github.com/jpatel531/stickyd/stats/sets"
 )
 
-type Stats struct {
+type AppStats struct {
 	Counters *Counters
 	Gauges   *Gauges
 	Sets     sets.Sets
 }
 
-func New(prefix string) *Stats {
-	return &Stats{
+func NewAppStats(prefix string) *AppStats {
+	return &AppStats{
 		Counters: newCounters(prefix),
 		Gauges:   newGauges(prefix),
 		Sets:     sets.New(),

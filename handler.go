@@ -9,27 +9,29 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type handler struct {
-	stats  *stats.Stats
-	config *config.Config
+	appStats     *stats.AppStats
+	processStats *stats.ProcessStats
+	config       *config.Config
 }
 
 func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 	log.Printf("Received %s from %+v\n", strings.TrimSpace(string(msg)), rinfo)
-	h.stats.Counters.IncrPacketsReceived()
+	h.appStats.Counters.IncrPacketsReceived()
 
 	metricsStrings := strings.Split(strings.TrimSpace(string(msg)), "\n")
 
 	for _, metricString := range metricsStrings {
-		h.stats.Counters.IncrMetricsReceived()
+		h.appStats.Counters.IncrMetricsReceived()
 
 		metric, err := metrics.Parse([]byte(metricString))
 		if err != nil {
 			log.Printf("error parsing metric %q. Error received: %v\n", metricString, err)
-			// 	// TODO stats.messages.bad_lines_seen
-			h.stats.Counters.IncrBadLinesSeen()
+			h.processStats.Messages.IncrBadLinesSeen()
+			h.appStats.Counters.IncrBadLinesSeen()
 			continue
 		}
 		metric.Key = util.SanitizeKey(metric.Key)
@@ -50,29 +52,26 @@ func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 		switch metric.Type {
 		// TODO add more
 		case "s":
-			h.stats.Sets.Insert(metric.Key, metric.Value)
+			h.appStats.Sets.Insert(metric.Key, metric.Value)
 		case "g", "c":
 			value, err := strconv.ParseFloat(metric.Value, 64)
 			if err != nil {
 				log.Printf("Expected float value, received %q", value)
-				// 	// TODO stats.messages.bad_lines_seen
-				h.stats.Counters.IncrBadLinesSeen()
+				h.processStats.Messages.IncrBadLinesSeen()
+				h.appStats.Counters.IncrBadLinesSeen()
 				continue
 			}
 
 			if metric.Type == "g" {
 				// TODO allow +- increments
-				h.stats.Gauges.Set(metric.Key, float64(value))
+				h.appStats.Gauges.Set(metric.Key, float64(value))
 			} else {
-				h.stats.Counters.Incr(metric.Key, float64(value*1/sampleRate))
+				h.appStats.Counters.Incr(metric.Key, float64(value*1/sampleRate))
 			}
 		default: // c
 			log.Printf("Unsupported type %q", metric.Type)
 		}
-
-		log.Printf("counters: %s\n", h.stats.Counters.String())
-		log.Printf("gauges: %s\n", h.stats.Gauges.String())
-		log.Printf("sets: %s\n", h.stats.Sets.String())
 	}
 
+	h.processStats.Messages.SetLastMessageSeen(time.Now().Unix())
 }
