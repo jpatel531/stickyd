@@ -18,5 +18,7 @@ type Frontend struct {
 }
 
 type KeyFlush struct {
-	Interval int `json:"interval"`
+	Interval int    `json:"interval,omitempty"`
+	Percent  int    `json:"percent,omitempty"`
+	Log      string `json:"log,omitempty"`
 }

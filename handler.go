@@ -5,6 +5,7 @@ import (
 	"github.com/jpatel531/stickyd/frontend"
 	"github.com/jpatel531/stickyd/metrics"
 	"github.com/jpatel531/stickyd/stats"
+	"github.com/jpatel531/stickyd/stats/counter"
 	"github.com/jpatel531/stickyd/util"
 	"log"
 	"strconv"
@@ -16,10 +17,10 @@ type handler struct {
 	appStats     *stats.AppStats
 	processStats *stats.ProcessStats
 	config       *config.Config
+	keyCounter   counter.Counter
 }
 
 func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
-	log.Printf("Received %s from %+v\n", strings.TrimSpace(string(msg)), rinfo)
 	h.appStats.Counters.IncrPacketsReceived()
 
 	metricsStrings := strings.Split(strings.TrimSpace(string(msg)), "\n")
@@ -40,7 +41,9 @@ func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 			log.Printf("metric received: %+v\n", metric)
 		}
 
-		// TODO add to key counter
+		if h.config.KeyFlush.Interval > 0 {
+			h.keyCounter.Incr(metric.Key, 1)
+		}
 
 		var sampleRate float64
 		if metric.SampleRate == nil {

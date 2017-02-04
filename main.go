@@ -3,8 +3,10 @@ package main
 import (
 	"github.com/jpatel531/stickyd/config"
 	"github.com/jpatel531/stickyd/frontend"
+	"github.com/jpatel531/stickyd/keylog"
 	"github.com/jpatel531/stickyd/mgmt"
 	"github.com/jpatel531/stickyd/stats"
+	"github.com/jpatel531/stickyd/stats/counter"
 	"log"
 	"os"
 	"time"
@@ -31,6 +33,7 @@ func main() {
 
 	processStats := stats.NewProcessStats(startupTime)
 	appStats := stats.NewAppStats(cfg.PrefixStats)
+	keyCounter := counter.New()
 
 	for _, serverCfg := range cfg.Servers {
 		server := frontend.NewUDPFrontend()
@@ -38,11 +41,17 @@ func main() {
 			appStats:     appStats,
 			processStats: processStats,
 			config:       cfg,
+			keyCounter:   keyCounter,
 		})
 	}
 
 	mgmtServer := mgmt.NewMgmtServer(appStats, processStats, cfg, startupTime)
 	mgmtServer.Start()
+
+	if cfg.KeyFlush.Interval > 0 {
+		keyLog := keylog.New(keyCounter, cfg.KeyFlush)
+		keyLog.Run()
+	}
 
 	select {}
 }

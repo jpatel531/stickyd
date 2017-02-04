@@ -11,6 +11,7 @@ type FloatMap interface {
 	Get(key string) float64
 	Set(key string, value float64)
 	Incr(key string, n float64)
+	Map() map[string]float64
 	json.Marshaler
 	fmt.Stringer
 }
@@ -48,10 +49,10 @@ func (c concurrentFloatMap) getShard(key string) *floatShard {
 }
 
 func (c concurrentFloatMap) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.merge())
+	return json.Marshal(c.Map())
 }
 
-func (c concurrentFloatMap) merge() map[string]float64 {
+func (c concurrentFloatMap) Map() map[string]float64 {
 	merger := make(map[string]float64)
 	for _, s := range c {
 		for k, v := range s.data {
@@ -62,7 +63,7 @@ func (c concurrentFloatMap) merge() map[string]float64 {
 }
 
 func (c concurrentFloatMap) String() string {
-	return fmt.Sprintf("%+v", c.merge())
+	return fmt.Sprintf("%+v", c.Map())
 }
 
 type floatShard struct {

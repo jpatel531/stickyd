@@ -8,6 +8,7 @@ import (
 
 type Counter interface {
 	Incr(key string, n float64)
+	Map() map[string]float64
 	json.Marshaler
 	fmt.Stringer
 }
