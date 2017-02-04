@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/jpatel531/stickyd/config"
 	"github.com/jpatel531/stickyd/frontend"
+	"github.com/jpatel531/stickyd/mgmt"
 	"github.com/jpatel531/stickyd/stats"
 	"log"
 	"os"
@@ -33,5 +34,9 @@ func main() {
 			config: cfg,
 		})
 	}
+
+	mgmtServer := mgmt.NewMgmtServer(sts, cfg)
+	mgmtServer.Start()
+
 	select {}
 }

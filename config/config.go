@@ -7,12 +7,14 @@ type Config struct {
 	Servers      []*Frontend `json:"servers,omitempty"`
 	DumpMessages bool        `json:"dumpMessages,omitempty"`
 	KeyFlush     KeyFlush    `json:"keyFlush"`
+	MgmtAddress  string      `json:"mgmtAddress,omitempty"`
+	MgmtPort     int         `json:"mgmtPort,omitempty"`
 }
 
 type Frontend struct {
-	AddressIPV6 bool
-	Address     string
-	Port        int
+	AddressIPV6 bool   `json:"addressIPV6,omitempty"`
+	Address     string `json:"address,omitempty"`
+	Port        int    `json:"port,omitempty"`
 }
 
 type KeyFlush struct {

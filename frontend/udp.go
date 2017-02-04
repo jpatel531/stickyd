@@ -37,6 +37,7 @@ func (u *udp) start(config *config.Frontend, handler Handler) {
 		log.Println(err)
 	}
 
+	log.Println("UDP stats frontend listening on", udpAddr.String())
 	for {
 		readUDPMessages(conn, handler)
 	}
