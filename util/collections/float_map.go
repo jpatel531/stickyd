@@ -12,17 +12,14 @@ type FloatMap interface {
 	Set(key string, value float64)
 	Incr(key string, n float64)
 	Map() map[string]float64
+	Clear()
 	json.Marshaler
 	fmt.Stringer
 }
 
 func NewFloatMap() FloatMap {
 	m := make(concurrentFloatMap, shardCount)
-	for i := 0; i < shardCount; i++ {
-		m[i] = &floatShard{
-			data: make(map[string]float64),
-		}
-	}
+	m.newShards()
 	return m
 }
 
@@ -60,6 +57,16 @@ func (c concurrentFloatMap) Map() map[string]float64 {
 		}
 	}
 	return merger
+}
+
+func (c concurrentFloatMap) Clear() {
+	c.newShards()
+}
+
+func (c concurrentFloatMap) newShards() {
+	for i := 0; i < shardCount; i++ {
+		c[i] = &floatShard{data: make(map[string]float64)}
+	}
 }
 
 func (c concurrentFloatMap) String() string {

@@ -64,5 +64,6 @@ func (k *KeyLog) run() {
 				fmt.Sprintf("%s count=%d key=%s\n", timeString, freq.frequency, freq.key)
 		}
 		writer.Write([]byte(logMessage))
+		k.keyCounter.Clear()
 	}
 }
