@@ -1,14 +1,18 @@
 package main
 
 import (
+	"github.com/jpatel531/stickyd/backend"
 	"github.com/jpatel531/stickyd/config"
 	"github.com/jpatel531/stickyd/frontend"
 	"github.com/jpatel531/stickyd/keylog"
 	"github.com/jpatel531/stickyd/mgmt"
+	"github.com/jpatel531/stickyd/pm"
 	"github.com/jpatel531/stickyd/stats"
 	"github.com/jpatel531/stickyd/stats/counter"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -35,6 +39,18 @@ func main() {
 	appStats := stats.NewAppStats(cfg.PrefixStats)
 	keyCounter := counter.New()
 
+	backends := make([]backend.Backend, 0)
+	if len(cfg.Backends) > 0 {
+
+	} else {
+		b := backend.Backends["console"](startupTime)
+		backends = []backend.Backend{b}
+	}
+
+	for _, b := range backends {
+		b.Start()
+	}
+
 	for _, serverCfg := range cfg.Servers {
 		server := frontend.NewUDPFrontend()
 		server.Start(serverCfg, handler{
@@ -53,5 +69,41 @@ func main() {
 		keyLog.Run()
 	}
 
-	select {}
+	flushInterval := cfg.FlushInterval
+	if flushInterval == 0 {
+		flushInterval = 10000
+	}
+
+	flushTicker := time.NewTicker(time.Millisecond * time.Duration(flushInterval))
+
+	signalChannel := make(chan os.Signal, 2)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
+
+	for {
+		select {
+		case <-flushTicker.C:
+			flushMetrics(appStats, flushInterval, backends)
+		case <-signalChannel:
+			log.Println("Interrupted. Flushing metrics...")
+			flushMetrics(appStats, flushInterval, backends)
+			stopBackends(backends)
+			os.Exit(1)
+		}
+	}
+}
+
+func flushMetrics(appStats *stats.AppStats, flushInterval int, backends []backend.Backend) {
+	bundle := &backend.FlushBundle{
+		Timestamp: time.Now(),
+		Metrics:   pm.ProcessMetrics(appStats, flushInterval),
+	}
+	for _, b := range backends {
+		b.Flush(bundle)
+	}
+}
+
+func stopBackends(backends []backend.Backend) {
+	for _, b := range backends {
+		b.Stop()
+	}
 }

@@ -31,3 +31,7 @@ func (g *Gauges) String() string {
 func (g *Gauges) MarshalJSON() ([]byte, error) {
 	return g.gauge.MarshalJSON()
 }
+
+func (g *Gauges) Map() map[string]float64 {
+	return g.gauge.Map()
+}

@@ -3,12 +3,14 @@ package config
 // TODO add:
 // 	- keyNameSanitize
 type Config struct {
-	PrefixStats  string      `json:"prefixStats"`
-	Servers      []*Frontend `json:"servers,omitempty"`
-	DumpMessages bool        `json:"dumpMessages,omitempty"`
-	KeyFlush     KeyFlush    `json:"keyFlush"`
-	MgmtAddress  string      `json:"mgmtAddress,omitempty"`
-	MgmtPort     int         `json:"mgmtPort,omitempty"`
+	PrefixStats   string      `json:"prefixStats"`
+	Servers       []*Frontend `json:"servers,omitempty"`
+	DumpMessages  bool        `json:"dumpMessages,omitempty"`
+	KeyFlush      KeyFlush    `json:"keyFlush"`
+	MgmtAddress   string      `json:"mgmtAddress,omitempty"`
+	MgmtPort      int         `json:"mgmtPort,omitempty"`
+	Backends      []string    `json:"backends,omitempty"`
+	FlushInterval int         `json:"flushInterval,omitempty"`
 }
 
 type Frontend struct {

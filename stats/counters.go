@@ -44,3 +44,7 @@ func (c *Counters) String() string {
 func (c *Counters) MarshalJSON() ([]byte, error) {
 	return c.counter.MarshalJSON()
 }
+
+func (c *Counters) Map() map[string]float64 {
+	return c.counter.Map()
+}
