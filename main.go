@@ -43,7 +43,14 @@ func main() {
 
 	backends := make([]backend.Backend, 0)
 	if len(cfg.Backends) > 0 {
-
+		for _, bName := range cfg.Backends {
+			backendConstructor, ok := backend.Backends[bName]
+			if !ok {
+				log.Printf("No such backend as %q\n", bName)
+				return
+			}
+			backends = append(backends, backendConstructor(startupTime))
+		}
 	} else {
 		b := backend.Backends["console"](startupTime)
 		backends = []backend.Backend{b}
