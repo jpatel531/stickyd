@@ -64,6 +64,11 @@ func (h *handler) handleRequest(conn io.ReadWriteCloser) {
 				conn.Write([]byte("Error marshalling gauges to json\n"))
 				continue
 			}
+		case "timers":
+			if err := writeStats(conn, h.appStats.Timers); err != nil {
+				conn.Write([]byte("Error marshalling timers to json\n"))
+				continue
+			}
 		case "quit":
 			return
 		}

@@ -56,9 +56,12 @@ func (c *consoleBackend) flush(bundle *FlushBundle) {
 
 	metrics := bundle.Metrics
 	out := map[string]interface{}{
-		"counters": metrics["counters"],
-		"gauges":   metrics["gauges"],
-		"sets":     metrics["sets"],
+		"counters":      metrics["counters"],
+		"gauges":        metrics["gauges"],
+		"sets":          metrics["sets"],
+		"timer_data":    metrics["timer_data"],
+		"counter_rates": metrics["counter_rates"],
+		"pctThreshold":  metrics["pctThreshold"],
 	}
 
 	outJSON, err := json.Marshal(out)

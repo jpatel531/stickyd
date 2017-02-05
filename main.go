@@ -70,11 +70,15 @@ func main() {
 		keyLog.Run()
 	}
 
+	percentThreshold := cfg.PercentThreshold
+	if len(percentThreshold) == 0 {
+		percentThreshold = append(percentThreshold, 90)
+	}
+
 	flushInterval := cfg.FlushInterval
 	if flushInterval == 0 {
 		flushInterval = 10000
 	}
-
 	flushTicker := time.NewTicker(time.Millisecond * time.Duration(flushInterval))
 
 	signalChannel := make(chan os.Signal, 2)
@@ -83,22 +87,28 @@ func main() {
 	for {
 		select {
 		case <-flushTicker.C:
-			flushMetrics(appStats, flushInterval, backends)
+			flushMetrics(appStats, flushInterval, backends, percentThreshold)
 			appStats.Clear()
 		case <-signalChannel:
 			log.Println("Interrupted. Flushing metrics...")
-			flushMetrics(appStats, flushInterval, backends)
+			flushMetrics(appStats, flushInterval, backends, percentThreshold)
 			stopBackends(backends)
 			os.Exit(1)
 		}
 	}
 }
 
-func flushMetrics(appStats *stats.AppStats, flushInterval int, backends []backend.Backend) {
+func flushMetrics(
+	appStats *stats.AppStats,
+	flushInterval int,
+	backends []backend.Backend,
+	percentThreshold []int,
+) {
+
 	flushWait := &sync.WaitGroup{}
 	bundle := &backend.FlushBundle{
 		Timestamp: time.Now(),
-		Metrics:   pm.ProcessMetrics(appStats, flushInterval),
+		Metrics:   pm.ProcessMetrics(appStats, flushInterval, percentThreshold),
 		Wait:      flushWait,
 	}
 

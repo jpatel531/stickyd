@@ -36,13 +36,14 @@ func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 			continue
 		}
 		metric.Key = util.SanitizeKey(metric.Key)
+		key := metric.Key
 
 		if h.config.DumpMessages {
 			log.Printf("metric received: %+v\n", metric)
 		}
 
 		if h.config.KeyFlush.Interval > 0 {
-			h.keyCounter.Incr(metric.Key, 1)
+			h.keyCounter.Incr(key, 1)
 		}
 
 		var sampleRate float64
@@ -53,10 +54,9 @@ func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 			// TODO handle > 1 sample rates
 		}
 		switch metric.Type {
-		// TODO add more
 		case "s":
-			h.appStats.Sets.Insert(metric.Key, metric.Value)
-		case "g", "c":
+			h.appStats.Sets.Insert(key, metric.Value)
+		case "g", "c", "ms":
 			value, err := strconv.ParseFloat(metric.Value, 64)
 			if err != nil {
 				log.Printf("Expected float value, received %q", value)
@@ -65,14 +65,19 @@ func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
 				continue
 			}
 
-			if metric.Type == "g" {
+			switch metric.Type {
+			case "g":
 				// TODO allow +- increments
-				h.appStats.Gauges.Set(metric.Key, float64(value))
-			} else {
-				h.appStats.Counters.Incr(metric.Key, float64(value*1/sampleRate))
+				h.appStats.Gauges.Set(key, float64(value))
+			case "c":
+				h.appStats.Counters.Incr(key, float64(value*1/sampleRate))
+			case "ms":
+				h.appStats.Timers.Append(key, value)
+				h.appStats.TimerCounters.Incr(key, float64(value*1/sampleRate))
 			}
-		default: // c
-			log.Printf("Unsupported type %q", metric.Type)
+
+		default:
+			log.Printf("Unsupported type %q\n", metric.Type)
 		}
 	}
 
