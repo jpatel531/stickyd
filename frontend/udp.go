@@ -9,10 +9,6 @@ import (
 
 const bufLen = 512
 
-func NewUDPFrontend() Frontend {
-	return new(udp)
-}
-
 type udp struct{}
 
 func (u *udp) Start(config *config.Frontend, handler Handler) {
@@ -54,10 +50,7 @@ func readUDPMessages(conn *net.UDPConn, handler Handler) {
 
 	msg := buf[:n]
 
-	go handler.HandleMessage(msg, &RemoteInfo{
-		Host: addr.IP.String(),
-		Port: addr.Port,
-	})
+	go handler.HandleMessage(msg, addr)
 
 	conn.WriteToUDP([]byte(""), addr)
 }

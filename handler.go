@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/jpatel531/stickyd/config"
-	"github.com/jpatel531/stickyd/frontend"
 	"github.com/jpatel531/stickyd/metrics"
 	"github.com/jpatel531/stickyd/stats"
 	"github.com/jpatel531/stickyd/stats/counter"
 	"github.com/jpatel531/stickyd/util"
 	"log"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +20,7 @@ type handler struct {
 	keyCounter   counter.Counter
 }
 
-func (h handler) HandleMessage(msg []byte, rinfo *frontend.RemoteInfo) {
+func (h handler) HandleMessage(msg []byte, addr net.Addr) {
 	h.appStats.Counters.IncrPacketsReceived()
 
 	metricsStrings := strings.Split(strings.TrimSpace(string(msg)), "\n")

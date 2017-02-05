@@ -2,17 +2,18 @@ package frontend
 
 import (
 	"github.com/jpatel531/stickyd/config"
+	"net"
 )
 
 type Frontend interface {
 	Start(*config.Frontend, Handler)
 }
 
-type RemoteInfo struct {
-	Host string
-	Port int
+type Handler interface {
+	HandleMessage(msg []byte, addr net.Addr)
 }
 
-type Handler interface {
-	HandleMessage(msg []byte, rinfo *RemoteInfo)
+var Frontends = map[string]Frontend{
+	"udp": &udp{},
+	"tcp": &tcp{},
 }

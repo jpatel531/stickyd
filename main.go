@@ -31,7 +31,8 @@ func main() {
 
 	cfg, err := config.Load(configFile)
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
+		return
 	}
 
 	startupTime := time.Now().Unix()
@@ -53,7 +54,12 @@ func main() {
 	}
 
 	for _, serverCfg := range cfg.Servers {
-		server := frontend.NewUDPFrontend()
+		server, ok := frontend.Frontends[serverCfg.Server]
+		if !ok {
+			log.Printf("No such frontend as %q\n", serverCfg.Server)
+			return
+		}
+
 		server.Start(serverCfg, handler{
 			appStats:     appStats,
 			processStats: processStats,

@@ -15,6 +15,7 @@ type Config struct {
 }
 
 type Frontend struct {
+	Server      string `json:"server,omitempty"`
 	AddressIPV6 bool   `json:"addressIPV6,omitempty"`
 	Address     string `json:"address,omitempty"`
 	Port        int    `json:"port,omitempty"`
