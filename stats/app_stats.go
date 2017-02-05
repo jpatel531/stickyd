@@ -18,6 +18,12 @@ type AppStats struct {
 	// Histogram
 }
 
+func (a *AppStats) Clear() {
+	a.Counters.Clear()
+	a.Gauges.Clear()
+	a.Sets.Clear()
+}
+
 func NewAppStats(prefix string) *AppStats {
 	return &AppStats{
 		Counters: newCounters(prefix),

@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -83,6 +84,7 @@ func main() {
 		select {
 		case <-flushTicker.C:
 			flushMetrics(appStats, flushInterval, backends)
+			appStats.Clear()
 		case <-signalChannel:
 			log.Println("Interrupted. Flushing metrics...")
 			flushMetrics(appStats, flushInterval, backends)
@@ -93,13 +95,18 @@ func main() {
 }
 
 func flushMetrics(appStats *stats.AppStats, flushInterval int, backends []backend.Backend) {
+	flushWait := &sync.WaitGroup{}
 	bundle := &backend.FlushBundle{
 		Timestamp: time.Now(),
 		Metrics:   pm.ProcessMetrics(appStats, flushInterval),
+		Wait:      flushWait,
 	}
+
 	for _, b := range backends {
+		flushWait.Add(1)
 		b.Flush(bundle)
 	}
+	flushWait.Wait()
 }
 
 func stopBackends(backends []backend.Backend) {

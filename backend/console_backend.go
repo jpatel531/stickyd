@@ -44,24 +44,30 @@ func (c *consoleBackend) Start() {
 
 func (c *consoleBackend) start() {
 	for bundle := range c.flushChannel {
-		c.log.Println("Flushing stats at ", bundle.Timestamp)
-
-		metrics := bundle.Metrics
-		out := map[string]interface{}{
-			"counters": metrics["counters"],
-			"gauges":   metrics["gauges"],
-			"sets":     metrics["sets"],
-		}
-
-		outJSON, err := json.Marshal(out)
-		if err != nil {
-			c.log.Println("Error marshalling metrics to JSON", err.Error())
-			continue
-		}
-
-		c.log.Println(string(outJSON))
+		c.flush(bundle)
 	}
 	c.wg.Done()
+}
+
+func (c *consoleBackend) flush(bundle *FlushBundle) {
+	defer bundle.Wait.Done()
+
+	c.log.Println("Flushing stats at ", bundle.Timestamp)
+
+	metrics := bundle.Metrics
+	out := map[string]interface{}{
+		"counters": metrics["counters"],
+		"gauges":   metrics["gauges"],
+		"sets":     metrics["sets"],
+	}
+
+	outJSON, err := json.Marshal(out)
+	if err != nil {
+		c.log.Println("Error marshalling metrics to JSON", err.Error())
+		return
+	}
+
+	c.log.Println(string(outJSON))
 }
 
 func (c *consoleBackend) Stop() {

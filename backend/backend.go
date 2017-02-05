@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"sync"
 	"time"
 )
 
@@ -15,6 +16,7 @@ type Backend interface {
 type FlushBundle struct {
 	Timestamp time.Time
 	Metrics   map[string]interface{}
+	Wait      *sync.WaitGroup
 }
 
 var Backends = map[string]func(int64) Backend{

@@ -11,21 +11,26 @@ type SetMap interface {
 	Has(key string, value interface{}) bool
 	Insert(key string, value interface{})
 	Map() map[string][]interface{}
+	Clear()
 	fmt.Stringer
 	json.Marshaler
 }
 
 func NewSetMap() SetMap {
 	m := make(concurrentSetMap, shardCount)
-	for i := 0; i < shardCount; i++ {
-		m[i] = &setShard{
-			data: make(map[string]set),
-		}
-	}
+	m.newShards()
 	return m
 }
 
 type concurrentSetMap []*setShard
+
+func (c concurrentSetMap) newShards() {
+	for i := 0; i < shardCount; i++ {
+		c[i] = &setShard{
+			data: make(map[string]set),
+		}
+	}
+}
 
 func (c concurrentSetMap) Has(key string, value interface{}) bool {
 	return c.getShard(key).has(key, value)
@@ -37,6 +42,10 @@ func (c concurrentSetMap) Insert(key string, value interface{}) {
 
 func (c concurrentSetMap) String() string {
 	return fmt.Sprintf("%+v", c.Map())
+}
+
+func (c concurrentSetMap) Clear() {
+	c.newShards()
 }
 
 func (c concurrentSetMap) getShard(key string) *setShard {
