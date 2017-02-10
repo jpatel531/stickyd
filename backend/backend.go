@@ -3,6 +3,8 @@ package backend
 import (
 	"sync"
 	"time"
+
+	"github.com/jpatel531/stickyd/pm"
 )
 
 type Backend interface {
@@ -15,10 +17,6 @@ type Backend interface {
 
 type FlushBundle struct {
 	Timestamp time.Time
-	Metrics   map[string]interface{}
+	Metrics   *pm.ProcessedMetrics
 	Wait      *sync.WaitGroup
-}
-
-var Backends = map[string]func(int64) Backend{
-	"console": NewConsoleBackend,
 }

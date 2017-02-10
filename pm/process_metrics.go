@@ -8,7 +8,17 @@ import (
 	"time"
 )
 
-func ProcessMetrics(appStats *stats.AppStats, flushInterval int, percentThreshold []int) map[string]interface{} {
+type ProcessedMetrics struct {
+	StickyDMetrics   map[string]int64              `json:"stickyd_metrics,omitempty"`
+	Counters         map[string]float64            `json:"counters,omitempty"`
+	CounterRates     map[string]float64            `json:"counter_rates,omitempty"`
+	Sets             map[string][]interface{}      `json:"sets,omitempty"`
+	Gauges           map[string]float64            `json:"gauges,omitempty"`
+	TimerData        map[string]map[string]float64 `json:"timer_data,omitempty"`
+	PercentThreshold []int                         `json:"pctThreshold,omitempty"`
+}
+
+func ProcessMetrics(appStats *stats.AppStats, flushInterval int, percentThreshold []int) *ProcessedMetrics {
 	startTime := time.Now().Unix()
 
 	counters := appStats.Counters.Map()
@@ -124,13 +134,13 @@ func ProcessMetrics(appStats *stats.AppStats, flushInterval int, percentThreshol
 		"processingTime": startTime - time.Now().Unix(),
 	}
 
-	return map[string]interface{}{
-		"stickyd_metrics": stickydMetrics,
-		"counters":        counters,
-		"counter_rates":   counterRates,
-		"sets":            appStats.Sets.Map(),
-		"gauges":          appStats.Gauges.Map(),
-		"timer_data":      timerData,
-		"pctThreshold":    percentThreshold,
+	return &ProcessedMetrics{
+		StickyDMetrics:   stickydMetrics,
+		Counters:         counters,
+		CounterRates:     counterRates,
+		Sets:             appStats.Sets.Map(),
+		Gauges:           appStats.Gauges.Map(),
+		TimerData:        timerData,
+		PercentThreshold: percentThreshold,
 	}
 }

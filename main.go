@@ -44,19 +44,24 @@ func main() {
 	backends := make([]backend.Backend, 0)
 	if len(cfg.Backends) > 0 {
 		for _, bName := range cfg.Backends {
-			backendConstructor, ok := backend.Backends[bName]
-			if !ok {
+			var b backend.Backend
+			switch bName {
+			case "console":
+				b = backend.NewConsoleBackend(startupTime)
+			case "graphite":
+				b = backend.NewGraphiteBackend(
+					startupTime, cfg.Graphite, cfg.PrefixStats,
+					cfg.GraphiteHost, cfg.GraphitePort)
+			default:
 				log.Printf("No such backend as %q\n", bName)
 				return
 			}
-			backends = append(backends, backendConstructor(startupTime))
+			backends = append(backends, b)
+			b.Start()
 		}
 	} else {
-		b := backend.Backends["console"](startupTime)
+		b := backend.NewConsoleBackend(startupTime)
 		backends = []backend.Backend{b}
-	}
-
-	for _, b := range backends {
 		b.Start()
 	}
 

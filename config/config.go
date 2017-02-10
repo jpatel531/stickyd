@@ -12,6 +12,9 @@ type Config struct {
 	Backends         []string    `json:"backends,omitempty"`
 	FlushInterval    int         `json:"flushInterval,omitempty"`
 	PercentThreshold []int       `json:"percentThreshold,omitempty"`
+	GraphitePort     int         `json:"graphitePort,omitempty"`
+	GraphiteHost     string      `json:"graphiteHost,omitempty"`
+	Graphite         Graphite    `json:"graphite,omitempty"`
 }
 
 type Frontend struct {
@@ -25,4 +28,14 @@ type KeyFlush struct {
 	Interval int    `json:"interval,omitempty"`
 	Percent  int    `json:"percent,omitempty"`
 	Log      string `json:"log,omitempty"`
+}
+
+type Graphite struct {
+	LegacyNamespace *bool   `json:"legacyNamespace,omitempty"`
+	GlobalPrefix    *string `json:"globalPrefix,omitempty"`
+	GlobalSuffix    *string `json:"globalSuffix,omitempty"`
+	PrefixCounter   string  `json:"prefixCounter,omitempty"`
+	PrefixTimer     string  `json:"prefixTimer,omitempty"`
+	PrefixGauge     string  `json:"prefixGauge,omitempty"`
+	PrefixSet       string  `json:"prefixSet,omitempty"`
 }

@@ -25,7 +25,7 @@ func NewConsoleBackend(startupTime int64) Backend {
 		lastFlush:     startupTime,
 		lastException: startupTime,
 		wg:            &sync.WaitGroup{},
-		log:           log.New(os.Stdout, logPrefix, log.LstdFlags),
+		log:           log.New(os.Stdout, "", log.LstdFlags),
 	}
 }
 
@@ -52,25 +52,16 @@ func (c *consoleBackend) start() {
 func (c *consoleBackend) flush(bundle *FlushBundle) {
 	defer bundle.Wait.Done()
 
-	c.log.Println("Flushing stats at ", bundle.Timestamp)
+	c.log.Println(logPrefix, "Flushing stats at ", bundle.Timestamp)
 
 	metrics := bundle.Metrics
-	out := map[string]interface{}{
-		"counters":      metrics["counters"],
-		"gauges":        metrics["gauges"],
-		"sets":          metrics["sets"],
-		"timer_data":    metrics["timer_data"],
-		"counter_rates": metrics["counter_rates"],
-		"pctThreshold":  metrics["pctThreshold"],
-	}
-
-	outJSON, err := json.Marshal(out)
+	outJSON, err := json.Marshal(metrics)
 	if err != nil {
-		c.log.Println("Error marshalling metrics to JSON", err.Error())
+		c.log.Println(log.Prefix, "Error marshalling metrics to JSON", err.Error())
 		return
 	}
 
-	c.log.Println(string(outJSON))
+	c.log.Println(logPrefix, string(outJSON))
 }
 
 func (c *consoleBackend) Stop() {
