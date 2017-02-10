@@ -1,0 +1,22 @@
+{
+	"servers": [
+		{
+			"server": "udp",
+			"port": 4000
+		},
+		{
+			"server": "tcp",
+			"port": 4300
+		}
+	],
+	"dumpMessages": false,
+	"prefixStats": "stickyd",
+	"keyFlush": {
+		"interval": 5000
+	},
+	"backends": ["console", "graphite"],
+	"graphiteHost": "localhost",
+	"graphite": {
+		"legacyNamespace": false
+	}
+}
