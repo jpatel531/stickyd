@@ -1,4 +1,3 @@
-- [	] Graphite backend
 - [	] Histogram data
 - [	] Implement rest of management console
 -	[	] Add backend status to mgmt stats
